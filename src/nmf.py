@@ -156,3 +156,40 @@ def divergence(V,W,H, beta = 2):
     div = np.sum((beta / (beta - 1)) * (V**beta - np.dot(W, H)**beta - V**(beta-1) * np.dot(W, H)))
     return div
     
+    
+
+def plot_filtered_spectrograms(V, W, H, S, sr = 5512, hop = 16):
+    """
+    Plots the frequency mask of each audio source S over time after non-negative matrix factorization.
+    
+    Parameters:
+    V (ndarray): the magnitude spectrogram of the mixture signal
+    W (ndarray): the learned spectral basis matrix of shape (F, K)
+    H (ndarray): the learned activation matrix of shape (K, T)
+    S (int): the number of audio sources
+    sr (int): the sample rate of the audio signal
+    hop (int): the hop length in samples
+    
+    Returns:
+    filtered_spectrograms (list): a list of filtered spectrograms for each audio source
+    """
+    
+    f, axs = plt.subplots(nrows=S, ncols=1, figsize=(10, 20))
+    filtered_spectrograms = []
+    
+    for i in range(S):
+        axs[i].set_title(f"Frequency Mask of Audio Source s = {i+1}")
+        
+        # Filter each source component
+        WsHs = W[:, [i]] @ H[[i], :]
+        filtered_spectrogram = WsHs / (W @ H) * V 
+        
+        # Compute the filtered spectrogram
+        D = librosa.amplitude_to_db(filtered_spectrogram, ref=np.max)
+        
+        # Show the filtered spectrogram
+        librosa.display.specshow(D, y_axis='hz', sr=sr, hop_length=hop, x_axis='time', cmap=matplotlib.cm.jet, ax=axs[i])
+        
+        filtered_spectrograms.append(filtered_spectrogram)
+        
+    return filtered_spectrograms
